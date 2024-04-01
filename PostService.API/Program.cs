@@ -1,4 +1,6 @@
 
+using PostService.API.Models;
+
 namespace PostService.API
 {
     public class Program
@@ -14,6 +16,13 @@ namespace PostService.API
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            //Database
+            builder.Services.Configure<PostDBSettings>(
+            builder.Configuration.GetSection("PostDB"));
+
+            builder.Services.AddSingleton<Services.PostService>();
+
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -23,7 +32,7 @@ namespace PostService.API
                 app.UseSwaggerUI();
             }
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
 
             app.UseAuthorization();
 
