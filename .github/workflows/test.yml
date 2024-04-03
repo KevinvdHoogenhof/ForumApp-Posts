@@ -1,0 +1,57 @@
+name: .NET test
+
+on:
+  pull_request:
+    branches: [ "develop" ]
+
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET    
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+    - uses: actions/cache@v3
+      with:
+        path: ~/.nuget/packages
+        # Look to see if there is a cache hit for the corresponding requirements file
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+            ${{ runner.os }}-nuget 
+            
+    - name: Restore dependencies
+      run: dotnet restore 
+
+    - name: Build
+      run: dotnet build --no-restore
+
+    - name: Run Snyk test
+      uses: snyk/actions/dotnet@master
+      continue-on-error: true
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}    
+      with:
+        args: --all-projects #--severity-threshold=high        
+      
+    - name: Dotnet test
+      run: dotnet test --no-build --logger "trx;LogFileName=test-results.trx" || true --verbosity normal
+      
+    - name: roslynator
+      run: dotnet tool install -g roslynator.dotnet.cli
+      
+    - name: roslynator test
+      run: roslynator analyze
+      
+    - name: Test Report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: Upload .NET Test results
+        path: "**/test-results.trx"                            
+#        reporter: dotnet-trx
+#        fail-on-error: true
