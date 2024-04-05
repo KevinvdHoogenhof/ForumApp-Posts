@@ -1,5 +1,7 @@
 
+using Confluent.Kafka;
 using PostService.API.Models;
+using PostService.API.Services;
 
 namespace PostService.API
 {
@@ -22,6 +24,13 @@ namespace PostService.API
 
             builder.Services.AddSingleton<Services.PostService>();
 
+            //Kafka consumer
+            var consumerConfig = builder.Configuration.GetSection("ConsumerConfig").Get<ConsumerConfig>();
+            var consumer = new ConsumerBuilder<string, int>(consumerConfig).Build();
+            consumer.Subscribe("test");
+
+            builder.Services.AddHostedService(sp =>
+                new KafkaConsumer(sp.GetRequiredService<ILogger<KafkaConsumer>>(), consumer));
 
             var app = builder.Build();
 
