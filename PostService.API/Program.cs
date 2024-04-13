@@ -1,5 +1,6 @@
 
 using Confluent.Kafka;
+using PostService.API.Context;
 using PostService.API.Models;
 using PostService.API.Services;
 
@@ -22,7 +23,9 @@ namespace PostService.API
             builder.Services.Configure<PostDBSettings>(
             builder.Configuration.GetSection("PostDB"));
 
-            builder.Services.AddSingleton<Services.PostService>();
+            builder.Services.AddSingleton<IPostContext, PostContext>();
+
+            builder.Services.AddSingleton<IPostService, Services.PostService>();
 
             //Kafka consumer
             var consumerConfig = builder.Configuration.GetSection("ConsumerConfig").Get<ConsumerConfig>();

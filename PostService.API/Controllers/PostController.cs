@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PostService.API.Models;
+using PostService.API.Services;
 
 namespace PostService.API.Controllers
 {
@@ -8,8 +9,8 @@ namespace PostService.API.Controllers
     [Route("[controller]")]
     public class PostController : ControllerBase
     {
-        private readonly Services.PostService _service;
-        public PostController(Services.PostService service) =>
+        private readonly IPostService _service;
+        public PostController(IPostService service) =>
             _service = service;
 
         [HttpGet]
