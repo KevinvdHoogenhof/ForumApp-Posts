@@ -12,6 +12,7 @@ namespace PostService.API.Services
         {
             _context = context;
         }
+
         public async Task<Post?> GetPost(string id)
         {
             return await _context.GetAsync(id);

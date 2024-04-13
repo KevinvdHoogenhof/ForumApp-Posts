@@ -7,14 +7,14 @@ namespace PostService.API.Services
     public class KafkaConsumer : BackgroundService
     {
         private readonly ILogger<KafkaConsumer> _log;
-        private readonly IConsumer<string, int> _consumer;
-        //private readonly Services.PostService _service; //Test
+        private readonly IConsumer<Null, string> _consumer;
+        private readonly IPostService _service; 
 
-        public KafkaConsumer(ILogger<KafkaConsumer> log, IConsumer<string, int> consumer)
+        public KafkaConsumer(ILogger<KafkaConsumer> log, IConsumer<Null, string> consumer, IPostService service)
         {
             _log = log;
             _consumer = consumer;
-            //_service = new Services.PostService(settings);
+            _service = service;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -26,7 +26,7 @@ namespace PostService.API.Services
             {
                 var consumeResult = _consumer.Consume(stoppingToken);
 
-                _log.LogInformation(consumeResult.Message.Key + " - " + consumeResult.Message.Value);
+                _log.LogInformation(consumeResult.Message.Value);
                 
                 /*Post p = new Post
                 {
