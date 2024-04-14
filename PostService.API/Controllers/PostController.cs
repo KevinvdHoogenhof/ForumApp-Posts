@@ -15,7 +15,19 @@ namespace PostService.API.Controllers
 
         [HttpGet]
         public async Task<List<Post>> Get() =>
-            await _service.GetPosts(); //Also add get for all posts under thread later, or change this to that
+            await _service.GetPosts();
+
+        [HttpGet("GetPostsByName")]
+        public async Task<List<Post>> GetPostsByName(string name) =>
+            await _service.GetPostsByName(name);
+
+        [HttpGet("GetPostByThreadID")]
+        public async Task<List<Post>> GetPostByThreadID(string id) =>
+            await _service.GetPostsByThreadID(id);
+
+        [HttpGet("GetPostByAuthorID")]
+        public async Task<List<Post>> GetPostByAuthorID(int id) =>
+            await _service.GetPostsByAuthorID(id);
 
         [HttpGet("{id:length(24)}")]
         public async Task<ActionResult<Post>> Get(string id) //For viewing one post = post + comments (current thread/threadname can be visible)
@@ -31,14 +43,15 @@ namespace PostService.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post(Post post) // Make sure to also ask for thread id and account id
-        {
-            await _service.InsertPost(post);
-            return CreatedAtAction(nameof(Get), new { id = post.Id }, post);
-        }
+        public async Task<ActionResult<Post>> Post(InsertPostDTO post) =>
+            CreatedAtAction(nameof(Get), new
+            {
+                id = ((await _service.InsertPost(new Post { ThreadId = post.ThreadId, ThreadName = post.ThreadName, AuthorId = post.AuthorId, AuthorName = post.AuthorName, Name = post.Name, Content = post.Content, Comments = 0 }))?.Id)
+                ?? throw new InvalidOperationException("Failed to insert the post.")
+            }, post);
 
         [HttpPut("{id:length(24)}")]
-        public async Task<IActionResult> Update(string id, Post post)
+        public async Task<ActionResult<Post>> Update(string id, UpdatePostDTO post)
         {
             var p = await _service.GetPost(id);
 
@@ -47,9 +60,16 @@ namespace PostService.API.Controllers
                 return NotFound();
             }
 
-            await _service.UpdatePost(post);
+            p.Name = post.Name;
+            p.Content = post.Content;
+            var po = await _service.UpdatePost(p);
 
-            return NoContent();
+            if (po is null)
+            {
+                return NotFound();
+            }
+
+            return po;
         }
 
         [HttpDelete("{id:length(24)}")]

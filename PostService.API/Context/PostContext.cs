@@ -1,6 +1,9 @@
 ﻿using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using PostService.API.Models;
+using System.Linq;
+using System.Threading;
+using System.Xml.Linq;
 
 namespace PostService.API.Context
 {
@@ -23,14 +26,35 @@ namespace PostService.API.Context
             return await _posts.Find(_ => true).ToListAsync();
         }
 
-        public async Task CreateAsync(Post post)
+        public async Task<List<Post>> GetAsyncNameSearch(string name)
         {
-            await _posts.InsertOneAsync(post);
+            var filter = Builders<Post>.Filter.Where(p => p.Name.Contains(name));
+            return await (await _posts.FindAsync(filter)).ToListAsync();
         }
 
-        public async Task UpdateAsync(Post post)
+        public async Task<List<Post>> GetAsyncByThreadID(string id)
         {
-            await _posts.ReplaceOneAsync(x => x.Id == post.Id, post);
+            var filter = Builders<Post>.Filter.Eq(p => p.ThreadId, id);
+            return await (await _posts.FindAsync(filter)).ToListAsync();
+        }
+
+        public async Task<List<Post>> GetAsyncByAuthorID(int id)
+        {
+            var filter = Builders<Post>.Filter.Eq(p => p.AuthorId, id);
+            return await _posts.Find(_ => true).ToListAsync();
+        }
+
+        public async Task<Post?> CreateAsync(Post post)
+        {
+            await _posts.InsertOneAsync(post);
+            return post;
+        }
+
+        public async Task<Post?> UpdateAsync(Post post)
+        {
+            return (await _posts.ReplaceOneAsync(x => x.Id == post.Id, post)).IsAcknowledged
+                ? await _posts.Find(x => x.Id == post.Id).FirstOrDefaultAsync()
+                : null;
         }
 
         public async Task RemoveAsync(string id)

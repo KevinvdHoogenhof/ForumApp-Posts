@@ -23,14 +23,29 @@ namespace PostService.API.Services
             return await _context.GetAsync();
         }
 
-        public async Task InsertPost(Post post)
+        public async Task<List<Post>> GetPostsByName(string name)
         {
-            await _context.CreateAsync(post);
+            return await _context.GetAsyncNameSearch(name);
         }
 
-        public async Task UpdatePost(Post post)
+        public async Task<List<Post>> GetPostsByThreadID(string id)
         {
-            await _context.UpdateAsync(post);
+            return await _context.GetAsyncByThreadID(id);
+        }
+
+        public async Task<List<Post>> GetPostsByAuthorID(int id)
+        {
+            return await _context.GetAsyncByAuthorID(id);
+        }
+
+        public async Task<Post?> InsertPost(Post post)
+        {
+            return await _context.CreateAsync(post);
+        }
+
+        public async Task<Post?> UpdatePost(Post post)
+        {
+            return await _context.UpdateAsync(post);
         }
 
         public async Task DeletePost(string id)

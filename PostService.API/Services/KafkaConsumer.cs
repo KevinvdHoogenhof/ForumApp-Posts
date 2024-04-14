@@ -1,6 +1,7 @@
 ﻿using Confluent.Kafka;
 using Microsoft.Extensions.Options;
 using PostService.API.Models;
+using System.Text.Json;
 
 namespace PostService.API.Services
 {
@@ -25,18 +26,23 @@ namespace PostService.API.Services
             while (!stoppingToken.IsCancellationRequested)
             {
                 var consumeResult = _consumer.Consume(stoppingToken);
+                var mv = consumeResult.Message.Value;
+                _log.LogInformation(mv);
 
-                _log.LogInformation(consumeResult.Message.Value);
-                
-                /*Post p = new Post
+                try
                 {
-                    ThreadId = "te",
-                    AuthorId = "te",
-                    Name = consumeResult.Message.Key,
-                    Content = consumeResult.Message.Value.ToString()
-                };
-
-                await _service.InsertPost(p);*/
+                    var t = JsonSerializer.Deserialize<ThreadIdName>(mv);
+                    var p = t != null ? await _service.GetPostsByThreadID(t.Id) : null;
+                    foreach (var p2 in p)
+                    {
+                        p2.ThreadName = t?.Name;
+                        await _service.UpdatePost(p2);
+                    }
+                }
+                catch (JsonException ex)
+                {
+                    Console.WriteLine($"JSON deserialization failed: {ex.Message}");
+                }
 
                 if (i++ % 1000 == 0)
                 {
@@ -49,6 +55,11 @@ namespace PostService.API.Services
         {
             _consumer.Dispose();
             base.Dispose();
+        }
+        private class ThreadIdName
+        {
+            public string Id { get; set; } = null!;
+            public string Name { get; set; } = null!;
         }
     }
 }

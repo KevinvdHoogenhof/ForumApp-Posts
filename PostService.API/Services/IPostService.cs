@@ -6,8 +6,11 @@ namespace PostService.API.Services
     {
         public Task<Post?> GetPost(string id);
         public Task<List<Post>> GetPosts();
-        public Task InsertPost(Post post);
-        public Task UpdatePost(Post post);
+        public Task<List<Post>> GetPostsByName(string name);
+        public Task<List<Post>> GetPostsByThreadID(string id);
+        public Task<List<Post>> GetPostsByAuthorID(int id);
+        public Task<Post?> InsertPost(Post post);
+        public Task<Post?> UpdatePost(Post post);
         public Task DeletePost(string id);
     }
 }
