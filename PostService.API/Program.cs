@@ -1,6 +1,7 @@
 
 using Confluent.Kafka;
 using Microsoft.Extensions.DependencyInjection;
+using MongoDB.Driver;
 using PostService.API.Context;
 using PostService.API.Models;
 using PostService.API.Services;
@@ -21,8 +22,8 @@ namespace PostService.API
             builder.Services.AddSwaggerGen();
 
             //Database
-            builder.Services.Configure<PostDBSettings>(
-            builder.Configuration.GetSection("PostDB"));
+            var connString = builder.Configuration.GetConnectionString("MongoDB");
+            builder.Services.AddSingleton<IMongoClient, MongoClient>(_ => new MongoClient(connString));
 
             builder.Services.AddSingleton<IPostContext, PostContext>();
 

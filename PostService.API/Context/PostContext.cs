@@ -10,11 +10,10 @@ namespace PostService.API.Context
     public class PostContext : IPostContext
     {
         private readonly IMongoCollection<Post> _posts;
-        public PostContext(IOptions<PostDBSettings> postdbsettings)
+        public PostContext(IMongoClient mongoClient)
         {
-            var mongoClient = new MongoClient(postdbsettings.Value.ConnectionString);
-            var mongoDatabase = mongoClient.GetDatabase(postdbsettings.Value.DatabaseName);
-            _posts = mongoDatabase.GetCollection<Post>(postdbsettings.Value.CollectionName);
+            var mongoDatabase = mongoClient.GetDatabase("PostDB");
+            _posts = mongoDatabase.GetCollection<Post>("Posts");
         }
         public async Task<Post?> GetAsync(string id)
         {
