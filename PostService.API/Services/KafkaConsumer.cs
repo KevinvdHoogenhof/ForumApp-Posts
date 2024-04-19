@@ -32,7 +32,7 @@ namespace PostService.API.Services
                 try
                 {
                     var t = JsonSerializer.Deserialize<ThreadIdName>(mv);
-                    var p = t != null ? await _service.GetPostsByThreadID(t.Id) : null;
+                    var p = t != null ? await _service.GetPostsByThreadId(t.Id) : null;
                     foreach (var p2 in p)
                     {
                         p2.ThreadName = t?.Name;

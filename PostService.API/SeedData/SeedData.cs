@@ -8,7 +8,7 @@ namespace PostService.API.SeedData
         {
             return
             [
-                new Post()
+                new()
                 {
                     Id = "662235bfc3337eb9aaf2b983",
                     ThreadId = "6622190fe21ab10bc3650d6b",

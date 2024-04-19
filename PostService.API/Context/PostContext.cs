@@ -45,7 +45,7 @@ namespace PostService.API.Context
         public async Task<List<Post>> GetAsyncByAuthorId(int id)
         {
             var filter = Builders<Post>.Filter.Eq(p => p.AuthorId, id);
-            return await _posts.Find(_ => true).ToListAsync();
+            return await (await _posts.FindAsync(filter)).ToListAsync();
         }
 
         public async Task<Post?> CreateAsync(Post post)
