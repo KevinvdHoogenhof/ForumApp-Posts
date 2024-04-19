@@ -33,6 +33,11 @@ namespace PostService.API.Services
             return await _context.GetAsyncByThreadId(id);
         }
 
+        public async Task<int> GetAmountOfPostsByThreadId(string id)
+        {
+            return await _context.GetAsyncPostAmountByThreadId(id);
+        }
+
         public async Task<List<Post>> GetPostsByAuthorId(int id)
         {
             return await _context.GetAsyncByAuthorId(id);

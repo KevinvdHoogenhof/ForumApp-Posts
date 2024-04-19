@@ -1,15 +1,16 @@
 ﻿using Confluent.Kafka;
 using Microsoft.Extensions.Options;
 using PostService.API.Models;
+using PostService.API.Services;
 using System.Text.Json;
 
-namespace PostService.API.Services
+namespace PostService.API.Kafka
 {
     public class KafkaConsumer : BackgroundService
     {
         private readonly ILogger<KafkaConsumer> _log;
         private readonly IConsumer<Null, string> _consumer;
-        private readonly IPostService _service; 
+        private readonly IPostService _service;
 
         public KafkaConsumer(ILogger<KafkaConsumer> log, IConsumer<Null, string> consumer, IPostService service)
         {

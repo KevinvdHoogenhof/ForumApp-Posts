@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using PostService.API.Kafka;
 using PostService.API.Models;
 using PostService.API.Services;
+using System.Text.Json;
 
 namespace PostService.API.Controllers
 {
@@ -10,8 +12,14 @@ namespace PostService.API.Controllers
     public class PostController : ControllerBase
     {
         private readonly IPostService _service;
-        public PostController(IPostService service) =>
+        private readonly IKafkaProducer _producer;
+        private readonly IKafkaProducer2 _producer2;
+        public PostController(IPostService service, IKafkaProducer producer, IKafkaProducer2 producer2)
+        {
             _service = service;
+            _producer = producer;
+            _producer2 = producer2;
+        }
 
         [HttpGet]
         public async Task<List<Post>> Get() =>
@@ -43,15 +51,30 @@ namespace PostService.API.Controllers
         }
 
         [HttpPost]
+        public async Task<ActionResult<Post>> Post(InsertPostDTO post, CancellationToken stoppingToken)
+        {
+            var insertedPost = await _service.InsertPost(new Post { ThreadId = post.ThreadId, ThreadName = post.ThreadName, AuthorId = post.AuthorId, AuthorName = post.AuthorName, Name = post.Name, Content = post.Content, Comments = 0 });
+
+            int Posts = await _service.GetAmountOfPostsByThreadId(insertedPost.ThreadId);
+
+            await _producer.Produce(JsonSerializer.Serialize(new { insertedPost?.ThreadId, Posts }), stoppingToken);
+
+            return CreatedAtAction(nameof(Get), new
+            {
+                id = (insertedPost?.Id) ?? throw new InvalidOperationException("Failed to insert the post.")
+            }, post);
+        }
+
+        /*[HttpPost]
         public async Task<ActionResult<Post>> Post(InsertPostDTO post) =>
             CreatedAtAction(nameof(Get), new
             {
                 id = ((await _service.InsertPost(new Post { ThreadId = post.ThreadId, ThreadName = post.ThreadName, AuthorId = post.AuthorId, AuthorName = post.AuthorName, Name = post.Name, Content = post.Content, Comments = 0 }))?.Id)
                 ?? throw new InvalidOperationException("Failed to insert the post.")
-            }, post);
+            }, post);*/
 
         [HttpPut("{id:length(24)}")]
-        public async Task<ActionResult<Post>> Update(string id, UpdatePostDTO post)
+        public async Task<ActionResult<Post>> Update(string id, UpdatePostDTO post, CancellationToken stoppingToken)
         {
             var p = await _service.GetPost(id);
 
@@ -63,6 +86,11 @@ namespace PostService.API.Controllers
             p.Name = post.Name;
             p.Content = post.Content;
             var po = await _service.UpdatePost(p);
+
+            if (p.Name != po?.Name)
+            {
+                await _producer2.Produce(JsonSerializer.Serialize(new { p.Id, po?.Name }), stoppingToken);
+            }
 
             if (po is null)
             {

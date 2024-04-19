@@ -1,8 +1,8 @@
-
 using Confluent.Kafka;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 using PostService.API.Context;
+using PostService.API.Kafka;
 using PostService.API.Models;
 using PostService.API.SeedData;
 using PostService.API.Services;
@@ -31,6 +31,15 @@ namespace PostService.API
             builder.Services.AddSingleton<IPostContext, PostContext>();
 
             builder.Services.AddSingleton<IPostService, Services.PostService>();
+
+            //Kafka producer
+            var producerConfig = builder.Configuration.GetSection("ProducerConfig").Get<ProducerConfig>();
+            var producer = new ProducerBuilder<Null, string>(producerConfig).Build();
+            builder.Services.AddSingleton<IKafkaProducer>(_ => new KafkaProducer(producer, "newpost"));
+
+            var producerConfig2 = builder.Configuration.GetSection("ProducerConfig").Get<ProducerConfig>();
+            var producer2 = new ProducerBuilder<Null, string>(producerConfig2).Build();
+            builder.Services.AddSingleton<IKafkaProducer2>(_ => new KafkaProducer2(producer2, "updatepostname"));
 
             //Kafka consumer
             var consumerConfig = builder.Configuration.GetSection("ConsumerConfig").Get<ConsumerConfig>();

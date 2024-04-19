@@ -42,6 +42,12 @@ namespace PostService.API.Context
             return await (await _posts.FindAsync(filter)).ToListAsync();
         }
 
+        public async Task<int> GetAsyncPostAmountByThreadId(string id)
+        {
+            var filter = Builders<Post>.Filter.Eq(p => p.ThreadId, id);
+            return (int)await _posts.CountDocumentsAsync(filter);
+        }
+
         public async Task<List<Post>> GetAsyncByAuthorId(int id)
         {
             var filter = Builders<Post>.Filter.Eq(p => p.AuthorId, id);
