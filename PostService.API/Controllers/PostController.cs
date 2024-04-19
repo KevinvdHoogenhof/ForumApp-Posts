@@ -21,13 +21,13 @@ namespace PostService.API.Controllers
         public async Task<List<Post>> GetPostsByName(string name) =>
             await _service.GetPostsByName(name);
 
-        [HttpGet("GetPostByThreadID")]
-        public async Task<List<Post>> GetPostByThreadID(string id) =>
-            await _service.GetPostsByThreadID(id);
+        [HttpGet("GetPostsByThreadId")]
+        public async Task<List<Post>> GetPostsByThreadId(string id) =>
+            await _service.GetPostsByThreadId(id);
 
-        [HttpGet("GetPostByAuthorID")]
-        public async Task<List<Post>> GetPostByAuthorID(int id) =>
-            await _service.GetPostsByAuthorID(id);
+        [HttpGet("GetPostsByAuthorId")]
+        public async Task<List<Post>> GetPostsByAuthorId(int id) =>
+            await _service.GetPostsByAuthorId(id);
 
         [HttpGet("{id:length(24)}")]
         public async Task<ActionResult<Post>> Get(string id) //For viewing one post = post + comments (current thread/threadname can be visible)

@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MongoDB.Driver;
 using PostService.API;
+using PostService.API.SeedData;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,14 +14,15 @@ using System.Threading.Tasks;
 
 namespace PostService.Tests
 {
-    public class PostTests : IClassFixture<MongoDbFixture>, IDisposable
+    public class APITests : IClassFixture<MongoDbFixture>, IDisposable
     {
         private readonly MongoDbFixture _fixture;
         private readonly HttpClient _client;
 
-        public PostTests(MongoDbFixture fixture)
+        public APITests(MongoDbFixture fixture)
         {
             _fixture = fixture;
+            var dataSeedingConfig = new DataSeedingConfiguration { SeedDataEnabled = false };
             var appFactory = new WebApplicationFactory<Program>()
                 .WithWebHostBuilder(builder =>
                 {
@@ -29,6 +31,8 @@ namespace PostService.Tests
                         services.RemoveAll<IMongoClient>();
                         services.AddSingleton<IMongoClient>(
                             (_) => _fixture.Client);
+                        services.RemoveAll<IDataSeedingConfiguration>();
+                        services.AddSingleton<IDataSeedingConfiguration>(dataSeedingConfig);
                     });
                 });
             _client = appFactory.CreateClient();

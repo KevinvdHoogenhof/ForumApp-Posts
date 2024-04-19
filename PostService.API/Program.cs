@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 using PostService.API.Context;
 using PostService.API.Models;
+using PostService.API.SeedData;
 using PostService.API.Services;
 
 namespace PostService.API
@@ -24,6 +25,8 @@ namespace PostService.API
             //Database
             var connString = builder.Configuration.GetConnectionString("MongoDB");
             builder.Services.AddSingleton<IMongoClient, MongoClient>(_ => new MongoClient(connString));
+
+            builder.Services.AddSingleton<IDataSeedingConfiguration, DataSeedingConfiguration>();
 
             builder.Services.AddSingleton<IPostContext, PostContext>();
 

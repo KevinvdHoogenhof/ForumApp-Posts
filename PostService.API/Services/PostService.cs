@@ -28,14 +28,14 @@ namespace PostService.API.Services
             return await _context.GetAsyncNameSearch(name);
         }
 
-        public async Task<List<Post>> GetPostsByThreadID(string id)
+        public async Task<List<Post>> GetPostsByThreadId(string id)
         {
-            return await _context.GetAsyncByThreadID(id);
+            return await _context.GetAsyncByThreadId(id);
         }
 
-        public async Task<List<Post>> GetPostsByAuthorID(int id)
+        public async Task<List<Post>> GetPostsByAuthorId(int id)
         {
-            return await _context.GetAsyncByAuthorID(id);
+            return await _context.GetAsyncByAuthorId(id);
         }
 
         public async Task<Post?> InsertPost(Post post)

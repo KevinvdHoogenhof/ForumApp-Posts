@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using PostService.API.Models;
+using PostService.API.SeedData;
 using System.Linq;
 using System.Threading;
 using System.Xml.Linq;
@@ -10,10 +11,14 @@ namespace PostService.API.Context
     public class PostContext : IPostContext
     {
         private readonly IMongoCollection<Post> _posts;
-        public PostContext(IMongoClient mongoClient)
+        public PostContext(IMongoClient mongoClient, IDataSeedingConfiguration dataSeedingConfig)
         {
             var mongoDatabase = mongoClient.GetDatabase("PostDB");
             _posts = mongoDatabase.GetCollection<Post>("Posts");
+            if (dataSeedingConfig.SeedDataEnabled && !_posts.AsQueryable().Any())
+            {
+                _posts.InsertManyAsync(SeedData.SeedData.GetPosts());
+            }
         }
         public async Task<Post?> GetAsync(string id)
         {
@@ -31,13 +36,13 @@ namespace PostService.API.Context
             return await (await _posts.FindAsync(filter)).ToListAsync();
         }
 
-        public async Task<List<Post>> GetAsyncByThreadID(string id)
+        public async Task<List<Post>> GetAsyncByThreadId(string id)
         {
             var filter = Builders<Post>.Filter.Eq(p => p.ThreadId, id);
             return await (await _posts.FindAsync(filter)).ToListAsync();
         }
 
-        public async Task<List<Post>> GetAsyncByAuthorID(int id)
+        public async Task<List<Post>> GetAsyncByAuthorId(int id)
         {
             var filter = Builders<Post>.Filter.Eq(p => p.AuthorId, id);
             return await _posts.Find(_ => true).ToListAsync();
