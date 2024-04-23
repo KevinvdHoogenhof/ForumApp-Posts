@@ -1,10 +1,6 @@
-﻿using Microsoft.Extensions.Options;
-using MongoDB.Driver;
+﻿using MongoDB.Driver;
 using PostService.API.Models;
 using PostService.API.SeedData;
-using System.Linq;
-using System.Threading;
-using System.Xml.Linq;
 
 namespace PostService.API.Context
 {

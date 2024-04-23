@@ -1,6 +1,4 @@
 ﻿using Confluent.Kafka;
-using Microsoft.Extensions.Options;
-using PostService.API.Models;
 using PostService.API.Services;
 using System.Text.Json;
 

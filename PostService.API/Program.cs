@@ -1,9 +1,7 @@
 using Confluent.Kafka;
-using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 using PostService.API.Context;
 using PostService.API.Kafka;
-using PostService.API.Models;
 using PostService.API.SeedData;
 using PostService.API.Services;
 

@@ -5,12 +5,8 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using MongoDB.Driver;
 using PostService.API;
 using PostService.API.SeedData;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace PostService.Tests
 {

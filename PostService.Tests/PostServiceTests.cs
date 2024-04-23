@@ -2,18 +2,11 @@
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.VisualStudio.TestPlatform.PlatformAbstractions.Interfaces;
 using MongoDB.Driver;
 using PostService.API;
 using PostService.API.Context;
 using PostService.API.SeedData;
 using PostService.API.Services;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace PostService.Tests
 {

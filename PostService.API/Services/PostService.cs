@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Options;
-using MongoDB.Driver;
-using PostService.API.Context;
+﻿using PostService.API.Context;
 using PostService.API.Models;
 
 namespace PostService.API.Services

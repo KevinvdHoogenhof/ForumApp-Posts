@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using PostService.API.Kafka;
 using PostService.API.Models;
 using PostService.API.Services;
@@ -57,7 +56,7 @@ namespace PostService.API.Controllers
 
             int Posts = await _service.GetAmountOfPostsByThreadId(insertedPost.ThreadId);
 
-            await _producer.Produce(JsonSerializer.Serialize(new { insertedPost?.ThreadId, Posts }), stoppingToken);
+            _ = _producer.Produce(JsonSerializer.Serialize(new { insertedPost?.ThreadId, Posts }), stoppingToken);
 
             return CreatedAtAction(nameof(Get), new
             {

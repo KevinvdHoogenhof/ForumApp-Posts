@@ -13,19 +13,12 @@ namespace PostService.API.Kafka
             _topic = topic;
         }
 
-        public async Task Produce(string m, CancellationToken cancellationToken)
-        {
-            await _producer.ProduceAsync(_topic, new Message<Null, string> { Value = m }, cancellationToken);
-        }
+        public Task Produce(string message, CancellationToken cancellationToken) =>
+            _producer.ProduceAsync(_topic, new Message<Null, string> { Value = message }, cancellationToken);
 
-        public async Task ProduceMultiple(IReadOnlyCollection<string> messages, CancellationToken cancellationToken)
-        {
-            await Task.WhenAll(messages.Select(t => _producer.ProduceAsync(_topic, new Message<Null, string> { Value = t }, cancellationToken)));
-        }
+        public Task ProduceMultiple(IReadOnlyCollection<string> messages, CancellationToken cancellationToken) =>
+            Task.WhenAll(messages.Select(message => _producer.ProduceAsync(_topic, new Message<Null, string> { Value = message }, cancellationToken)));
 
-        public void Dispose()
-        {
-            _producer.Dispose();
-        }
+        public void Dispose() => _producer.Dispose();
     }
 }
