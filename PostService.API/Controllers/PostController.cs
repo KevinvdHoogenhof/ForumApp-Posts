@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using PostService.API.Kafka;
 using PostService.API.Models;
+using PostService.API.Services;
+using System.Text.Json;
 
 namespace PostService.API.Controllers
 {
@@ -8,13 +10,31 @@ namespace PostService.API.Controllers
     [Route("[controller]")]
     public class PostController : ControllerBase
     {
-        private readonly Services.PostService _service;
-        public PostController(Services.PostService service) =>
+        private readonly IPostService _service;
+        private readonly IKafkaProducer _producer;
+        private readonly IKafkaProducer2 _producer2;
+        public PostController(IPostService service, IKafkaProducer producer, IKafkaProducer2 producer2)
+        {
             _service = service;
+            _producer = producer;
+            _producer2 = producer2;
+        }
 
         [HttpGet]
         public async Task<List<Post>> Get() =>
-            await _service.GetPosts(); //Also add get for all posts under thread later, or change this to that
+            await _service.GetPosts();
+
+        [HttpGet("GetPostsByName/{name}")]
+        public async Task<List<Post>> GetPostsByName(string name) =>
+            await _service.GetPostsByName(name);
+
+        [HttpGet("GetPostsByThreadId/{id:length(24)}")]
+        public async Task<List<Post>> GetPostsByThreadId(string id) =>
+            await _service.GetPostsByThreadId(id);
+
+        [HttpGet("GetPostsByAuthorId/{id}")]
+        public async Task<List<Post>> GetPostsByAuthorId(int id) =>
+            await _service.GetPostsByAuthorId(id);
 
         [HttpGet("{id:length(24)}")]
         public async Task<ActionResult<Post>> Get(string id) //For viewing one post = post + comments (current thread/threadname can be visible)
@@ -30,14 +50,30 @@ namespace PostService.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post(Post post) // Make sure to also ask for thread id and account id
+        public async Task<ActionResult<Post>> Post(InsertPostDTO post, CancellationToken stoppingToken)
         {
-            await _service.InsertPost(post);
-            return CreatedAtAction(nameof(Get), new { id = post.Id }, post);
+            var insertedPost = await _service.InsertPost(new Post { ThreadId = post.ThreadId, ThreadName = post.ThreadName, AuthorId = post.AuthorId, AuthorName = post.AuthorName, Name = post.Name, Content = post.Content, Comments = 0 });
+
+            int Posts = await _service.GetAmountOfPostsByThreadId(insertedPost.ThreadId);
+
+            _ = _producer.Produce(JsonSerializer.Serialize(new { insertedPost?.ThreadId, Posts }), stoppingToken);
+
+            return CreatedAtAction(nameof(Get), new
+            {
+                id = (insertedPost?.Id) ?? throw new InvalidOperationException("Failed to insert the post.")
+            }, post);
         }
 
+        /*[HttpPost]
+        public async Task<ActionResult<Post>> Post(InsertPostDTO post) =>
+            CreatedAtAction(nameof(Get), new
+            {
+                id = ((await _service.InsertPost(new Post { ThreadId = post.ThreadId, ThreadName = post.ThreadName, AuthorId = post.AuthorId, AuthorName = post.AuthorName, Name = post.Name, Content = post.Content, Comments = 0 }))?.Id)
+                ?? throw new InvalidOperationException("Failed to insert the post.")
+            }, post);*/
+
         [HttpPut("{id:length(24)}")]
-        public async Task<IActionResult> Update(string id, Post post)
+        public async Task<ActionResult<Post>> Update(string id, UpdatePostDTO post, CancellationToken stoppingToken)
         {
             var p = await _service.GetPost(id);
 
@@ -46,9 +82,21 @@ namespace PostService.API.Controllers
                 return NotFound();
             }
 
-            await _service.UpdatePost(post);
+            p.Name = post.Name;
+            p.Content = post.Content;
+            var po = await _service.UpdatePost(p);
 
-            return NoContent();
+            if (p.Name != po?.Name)
+            {
+                await _producer2.Produce(JsonSerializer.Serialize(new { p.Id, po?.Name }), stoppingToken);
+            }
+
+            if (po is null)
+            {
+                return NotFound();
+            }
+
+            return po;
         }
 
         [HttpDelete("{id:length(24)}")]

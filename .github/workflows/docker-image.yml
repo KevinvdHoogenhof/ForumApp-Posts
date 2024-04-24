@@ -30,5 +30,4 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/forumapp-posts:latest
-          cache-from: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/forumapp-posts:buildcache
-          cache-to: type=registry,ref=${{ secrets.DOCKER_HUB_USERNAME }}/forumapp-posts:buildcache,mode=max
+          

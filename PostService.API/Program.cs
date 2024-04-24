@@ -1,5 +1,9 @@
-
-using PostService.API.Models;
+using Confluent.Kafka;
+using MongoDB.Driver;
+using PostService.API.Context;
+using PostService.API.Kafka;
+using PostService.API.SeedData;
+using PostService.API.Services;
 
 namespace PostService.API
 {
@@ -17,11 +21,31 @@ namespace PostService.API
             builder.Services.AddSwaggerGen();
 
             //Database
-            builder.Services.Configure<PostDBSettings>(
-            builder.Configuration.GetSection("PostDB"));
+            var connString = builder.Configuration.GetConnectionString("MongoDB");
+            builder.Services.AddSingleton<IMongoClient, MongoClient>(_ => new MongoClient(connString));
 
-            builder.Services.AddSingleton<Services.PostService>();
+            builder.Services.AddSingleton<IDataSeedingConfiguration, DataSeedingConfiguration>();
 
+            builder.Services.AddSingleton<IPostContext, PostContext>();
+
+            builder.Services.AddSingleton<IPostService, Services.PostService>();
+
+            //Kafka producer
+            var producerConfig = builder.Configuration.GetSection("ProducerConfig").Get<ProducerConfig>();
+            var producer = new ProducerBuilder<Null, string>(producerConfig).Build();
+            builder.Services.AddSingleton<IKafkaProducer>(_ => new KafkaProducer(producer, "newpost"));
+
+            var producerConfig2 = builder.Configuration.GetSection("ProducerConfig").Get<ProducerConfig>();
+            var producer2 = new ProducerBuilder<Null, string>(producerConfig2).Build();
+            builder.Services.AddSingleton<IKafkaProducer2>(_ => new KafkaProducer2(producer2, "updatepostname"));
+
+            //Kafka consumer
+            var consumerConfig = builder.Configuration.GetSection("ConsumerConfig").Get<ConsumerConfig>();
+            var consumer = new ConsumerBuilder<Null, string>(consumerConfig).Build();
+            //consumer.Subscribe("updatethreadname");
+
+            builder.Services.AddHostedService(sp =>
+                new KafkaConsumer(sp.GetRequiredService<ILogger<KafkaConsumer>>(), consumer, sp.GetRequiredService<IPostService>()));
 
             var app = builder.Build();
 
@@ -35,7 +59,6 @@ namespace PostService.API
             //app.UseHttpsRedirection();
 
             app.UseAuthorization();
-
 
             app.MapControllers();
 
