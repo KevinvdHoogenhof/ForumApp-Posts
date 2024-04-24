@@ -24,15 +24,15 @@ namespace PostService.API.Controllers
         public async Task<List<Post>> Get() =>
             await _service.GetPosts();
 
-        [HttpGet("GetPostsByName")]
+        [HttpGet("GetPostsByName/{name:length(24)}")]
         public async Task<List<Post>> GetPostsByName(string name) =>
             await _service.GetPostsByName(name);
 
-        [HttpGet("GetPostsByThreadId")]
+        [HttpGet("GetPostsByThreadId/{id:length(24)}")]
         public async Task<List<Post>> GetPostsByThreadId(string id) =>
             await _service.GetPostsByThreadId(id);
 
-        [HttpGet("GetPostsByAuthorId")]
+        [HttpGet("GetPostsByAuthorId/{id:length(24)}")]
         public async Task<List<Post>> GetPostsByAuthorId(int id) =>
             await _service.GetPostsByAuthorId(id);
 
