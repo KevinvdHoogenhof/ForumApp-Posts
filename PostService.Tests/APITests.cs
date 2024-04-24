@@ -39,7 +39,7 @@ namespace PostService.Tests
             // Arrange
             var _db = _fixture.Client.GetDatabase("PostDB");
             var collection = _db.GetCollection<API.Models.Post>("Posts");
-            await collection.InsertOneAsync(new API.Models.Post { ThreadId = "Test", ThreadName = "Test", AuthorId = 0, AuthorName = "Test", Name = "Test", Content = "Test", Comments= 0 });
+            await collection.InsertOneAsync(new API.Models.Post { ThreadId = "tid1_1234512345123451234", ThreadName = "Test", AuthorId = 0, AuthorName = "Test", Name = "Test", Content = "Test", Comments= 0 });
 
             // Act
             var res = await _client.GetAsync("/post");
@@ -79,15 +79,15 @@ namespace PostService.Tests
             // Arrange
             var _db = _fixture.Client.GetDatabase("PostDB");
             var collection = _db.GetCollection<API.Models.Post>("Posts");
-            API.Models.Post post1 = new() { ThreadId = "tid", ThreadName = "test", AuthorId = 0, AuthorName = "asd", Name = "Test", Content = "test", Comments = 0 };
-            API.Models.Post post2 = new() { ThreadId = "tid", ThreadName = "test", AuthorId = 0, AuthorName = "asd", Name = "Test2", Content = "test", Comments = 0 };
-            API.Models.Post post3 = new() { ThreadId = "tid", ThreadName = "test", AuthorId = 0, AuthorName = "asd", Name = "different name", Content = "test", Comments = 0 };
+            API.Models.Post post1 = new() { ThreadId = "tid1_1234512345123451234", ThreadName = "test", AuthorId = 0, AuthorName = "asd", Name = "Test", Content = "test", Comments = 0 };
+            API.Models.Post post2 = new() { ThreadId = "tid1_1234512345123451234", ThreadName = "test", AuthorId = 0, AuthorName = "asd", Name = "Test2", Content = "test", Comments = 0 };
+            API.Models.Post post3 = new() { ThreadId = "other_123451234512345123", ThreadName = "test", AuthorId = 0, AuthorName = "asd", Name = "different name", Content = "test", Comments = 0 };
             await collection.InsertOneAsync(post1);
             await collection.InsertOneAsync(post2);
             await collection.InsertOneAsync(post3);
 
             // Act
-            var res = await _client.GetAsync("/post/getpostsbyname?name=Test");
+            var res = await _client.GetAsync("/post/getpostsbyname/Test");
             res.EnsureSuccessStatusCode();
             var content = await res.Content.ReadAsStringAsync();
             var posts = JsonSerializer.Deserialize<ICollection<API.Models.Post>>(content, new JsonSerializerOptions
@@ -109,15 +109,15 @@ namespace PostService.Tests
             // Arrange
             var _db = _fixture.Client.GetDatabase("PostDB");
             var collection = _db.GetCollection<API.Models.Post>("Posts");
-            API.Models.Post post1 = new() { ThreadId = "tid", ThreadName = "test", AuthorId = 0, AuthorName = "asd", Name = "Test", Content = "test", Comments = 0 };
-            API.Models.Post post2 = new() { ThreadId = "tid", ThreadName = "test", AuthorId = 0, AuthorName = "asd", Name = "Test2", Content = "test", Comments = 0 };
-            API.Models.Post post3 = new() { ThreadId = "other", ThreadName = "test", AuthorId = 0, AuthorName = "asd", Name = "different name", Content = "test", Comments = 0 };
+            API.Models.Post post1 = new() { ThreadId = "tid1_1234512345123451234", ThreadName = "test", AuthorId = 0, AuthorName = "asd", Name = "Test", Content = "test", Comments = 0 };
+            API.Models.Post post2 = new() { ThreadId = "tid1_1234512345123451234", ThreadName = "test", AuthorId = 0, AuthorName = "asd", Name = "Test2", Content = "test", Comments = 0 };
+            API.Models.Post post3 = new() { ThreadId = "other_123451234512345123", ThreadName = "test", AuthorId = 0, AuthorName = "asd", Name = "different name", Content = "test", Comments = 0 };
             await collection.InsertOneAsync(post1);
             await collection.InsertOneAsync(post2);
             await collection.InsertOneAsync(post3);
 
             // Act
-            var res = await _client.GetAsync("/post/getpostsbythreadid?id=tid");
+            var res = await _client.GetAsync("/post/getpostsbythreadid/tid1_1234512345123451234");
             res.EnsureSuccessStatusCode();
             var content = await res.Content.ReadAsStringAsync();
             var posts = JsonSerializer.Deserialize<ICollection<API.Models.Post>>(content, new JsonSerializerOptions
@@ -131,7 +131,7 @@ namespace PostService.Tests
             Assert.Equal(2, posts.Count);
             var resultItem = posts.FirstOrDefault();
             Assert.NotNull(resultItem);
-            Assert.Equal("tid", resultItem.ThreadId);
+            Assert.Equal("tid1_1234512345123451234", resultItem.ThreadId);
         }
         [Fact]
         public async Task GetPostsByAuthorId_ShouldReturnPostsWithAuthorId()
@@ -139,15 +139,15 @@ namespace PostService.Tests
             // Arrange
             var _db = _fixture.Client.GetDatabase("PostDB");
             var collection = _db.GetCollection<API.Models.Post>("Posts");
-            API.Models.Post post1 = new() { ThreadId = "tid", ThreadName = "test", AuthorId = 0, AuthorName = "asd", Name = "Test", Content = "test", Comments = 0 };
-            API.Models.Post post2 = new() { ThreadId = "tid", ThreadName = "test", AuthorId = 0, AuthorName = "asd", Name = "Test2", Content = "test", Comments = 0 };
-            API.Models.Post post3 = new() { ThreadId = "tid", ThreadName = "test", AuthorId = 1, AuthorName = "Different author", Name = "different name", Content = "test", Comments = 0 };
+            API.Models.Post post1 = new() { ThreadId = "tid1_1234512345123451234", ThreadName = "test", AuthorId = 0, AuthorName = "asd", Name = "Test", Content = "test", Comments = 0 };
+            API.Models.Post post2 = new() { ThreadId = "tid1_1234512345123451234", ThreadName = "test", AuthorId = 0, AuthorName = "asd", Name = "Test2", Content = "test", Comments = 0 };
+            API.Models.Post post3 = new() { ThreadId = "other_123451234512345123", ThreadName = "test", AuthorId = 1, AuthorName = "Different author", Name = "different name", Content = "test", Comments = 0 };
             await collection.InsertOneAsync(post1);
             await collection.InsertOneAsync(post2);
             await collection.InsertOneAsync(post3);
 
             // Act
-            var res = await _client.GetAsync("/post/getpostsbyauthorid?id=0");
+            var res = await _client.GetAsync("/post/getpostsbyauthorid/0");
             res.EnsureSuccessStatusCode();
             var content = await res.Content.ReadAsStringAsync();
             var posts = JsonSerializer.Deserialize<ICollection<API.Models.Post>>(content, new JsonSerializerOptions
@@ -167,7 +167,7 @@ namespace PostService.Tests
         public async Task PostPost_ShouldPostPost()
         {
             //Arrange
-            API.Models.InsertPostDTO post = new() { ThreadId = "tid", ThreadName = "test", AuthorId = 0, AuthorName = "asd", Name = "Test", Content = "test" };
+            API.Models.InsertPostDTO post = new() { ThreadId = "tid1_1234512345123451234", ThreadName = "test", AuthorId = 0, AuthorName = "asd", Name = "Test", Content = "test" };
 
             // Act
             var res = await _client.PostAsync("/post/", new StringContent(JsonSerializer.Serialize(post), Encoding.UTF8, "application/json"));
@@ -204,7 +204,7 @@ namespace PostService.Tests
             // Arrange
             var _db = _fixture.Client.GetDatabase("PostDB");
             var collection = _db.GetCollection<API.Models.Post>("Posts");
-            API.Models.Post post = new() { ThreadId = "tid", ThreadName = "test", AuthorId = 0, AuthorName = "asd", Name = "Test", Content = "test", Comments = 0 };
+            API.Models.Post post = new() { ThreadId = "tid1_1234512345123451234", ThreadName = "test", AuthorId = 0, AuthorName = "asd", Name = "Test", Content = "test", Comments = 0 };
             await collection.InsertOneAsync(post);
 
             API.Models.UpdatePostDTO updatedpost = new() { Name = "Updated name", Content = "Updated content" };
@@ -246,7 +246,7 @@ namespace PostService.Tests
             // Arrange
             var _db = _fixture.Client.GetDatabase("PostDB");
             var collection = _db.GetCollection<API.Models.Post>("Posts");
-            API.Models.Post post = new() { ThreadId = "tid", ThreadName = "test", AuthorId = 0, AuthorName = "asd", Name = "Test", Content = "test", Comments = 0 };
+            API.Models.Post post = new() { ThreadId = "tid1_1234512345123451234", ThreadName = "test", AuthorId = 0, AuthorName = "asd", Name = "Test", Content = "test", Comments = 0 };
             await collection.InsertOneAsync(post);
 
             // Act

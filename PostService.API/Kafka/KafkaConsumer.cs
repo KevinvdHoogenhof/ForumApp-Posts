@@ -24,28 +24,47 @@ namespace PostService.API.Kafka
             var i = 0;
             while (!stoppingToken.IsCancellationRequested)
             {
-                var consumeResult = _consumer.Consume(stoppingToken);
-                var mv = consumeResult.Message.Value;
-                _log.LogInformation(mv);
-
                 try
                 {
-                    var t = JsonSerializer.Deserialize<ThreadIdName>(mv);
-                    var p = t != null ? await _service.GetPostsByThreadId(t.Id) : null;
-                    foreach (var p2 in p)
+                    _consumer.Subscribe("updatethreadname");
+
+                    var consumeResult = _consumer.Consume(stoppingToken);
+                    var mv = consumeResult.Message.Value;
+                    _log.LogInformation(mv);
+
+                    try
                     {
-                        p2.ThreadName = t?.Name;
-                        await _service.UpdatePost(p2);
+                        var t = JsonSerializer.Deserialize<ThreadIdName>(mv);
+                        var p = t != null ? await _service.GetPostsByThreadId(t.Id) : null;
+                        foreach (var p2 in p)
+                        {
+                            p2.ThreadName = t?.Name;
+                            await _service.UpdatePost(p2);
+                        }
+                    }
+                    catch (JsonException ex)
+                    {
+                        Console.WriteLine($"JSON deserialization failed: {ex.Message}");
+                    }
+
+                    if (i++ % 1000 == 0)
+                    {
+                        _consumer.Commit();
                     }
                 }
-                catch (JsonException ex)
+                catch (ConsumeException ex)
                 {
-                    Console.WriteLine($"JSON deserialization failed: {ex.Message}");
-                }
+                    _log.LogInformation($"Error consuming message: {ex.Error.Reason}");
 
-                if (i++ % 1000 == 0)
+                    await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+                }
+                catch (OperationCanceledException)
                 {
-                    _consumer.Commit();
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    _log.LogError(ex, "An unexpected error occurred while consuming messages.");
                 }
             }
         }

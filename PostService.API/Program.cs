@@ -42,7 +42,7 @@ namespace PostService.API
             //Kafka consumer
             var consumerConfig = builder.Configuration.GetSection("ConsumerConfig").Get<ConsumerConfig>();
             var consumer = new ConsumerBuilder<Null, string>(consumerConfig).Build();
-            consumer.Subscribe("updatethreadname");
+            //consumer.Subscribe("updatethreadname");
 
             builder.Services.AddHostedService(sp =>
                 new KafkaConsumer(sp.GetRequiredService<ILogger<KafkaConsumer>>(), consumer, sp.GetRequiredService<IPostService>()));
