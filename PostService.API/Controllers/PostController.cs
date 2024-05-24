@@ -89,7 +89,7 @@ namespace PostService.API.Controllers
 
             if (oldname != po?.Name)
             {
-                await _producer2.Produce(JsonSerializer.Serialize(new { p.Id, po?.Name }), stoppingToken);
+                _ = _producer2.Produce(JsonSerializer.Serialize(new { p.Id, po?.Name }), stoppingToken);
             }
 
             if (po is null)
@@ -101,7 +101,7 @@ namespace PostService.API.Controllers
         }
 
         [HttpDelete("{id:length(24)}")]
-        public async Task<IActionResult> Delete(string id)
+        public async Task<IActionResult> Delete(string id, CancellationToken stoppingToken)
         {
             var p = await _service.GetPost(id);
 
@@ -111,6 +111,10 @@ namespace PostService.API.Controllers
             }
 
             await _service.DeletePost(id);
+
+            int posts = await _service.GetAmountOfPostsByThreadId(p.ThreadId) - 1;
+
+            _ = _producer.Produce(JsonSerializer.Serialize(new { p?.ThreadId, posts }), stoppingToken);
 
             return NoContent();
         }

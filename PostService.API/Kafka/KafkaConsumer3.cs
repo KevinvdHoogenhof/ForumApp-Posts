@@ -1,6 +1,7 @@
 ﻿using Confluent.Kafka;
 using PostService.API.Services;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace PostService.API.Kafka
 {
@@ -35,6 +36,7 @@ namespace PostService.API.Kafka
                     try
                     {
                         var t = JsonSerializer.Deserialize<PostIdComments>(mv);
+                        _log.LogInformation($"Deserialized PostId: {t.PostId}, Comments: {t.Comments}");
                         var p = t != null ? await _service.GetPost(t.PostId) : null;
                         p.Comments = t.Comments;
                         await _service.UpdatePost(p);
@@ -44,10 +46,10 @@ namespace PostService.API.Kafka
                         Console.WriteLine($"JSON deserialization failed: {ex.Message}");
                     }
 
-                    if (i++ % 1000 == 0)
-                    {
+                    //if (i++ % 1000 == 0)
+                    //{
                         _consumer.Commit();
-                    }
+                    //}
                 }
                 catch (ConsumeException ex)
                 {
@@ -73,7 +75,9 @@ namespace PostService.API.Kafka
         }
         private class PostIdComments
         {
+            [JsonPropertyName("PostId")]
             public string PostId { get; set; } = null!;
+            [JsonPropertyName("comments")]
             public int Comments { get; set; } = 0;
         }
     }

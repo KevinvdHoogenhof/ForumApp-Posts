@@ -52,10 +52,10 @@ namespace PostService.API.Kafka
                         Console.WriteLine($"JSON deserialization failed: {ex.Message}");
                     }
 
-                    if (i++ % 1000 == 0)
-                    {
+                    //if (i++ % 1000 == 0)
+                    //{
                         _consumer.Commit();
-                    }
+                    //}
                 }
                 catch (ConsumeException ex)
                 {
