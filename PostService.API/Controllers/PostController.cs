@@ -54,9 +54,9 @@ namespace PostService.API.Controllers
         {
             var insertedPost = await _service.InsertPost(new Post { ThreadId = post.ThreadId, ThreadName = post.ThreadName, AuthorId = post.AuthorId, AuthorName = post.AuthorName, Name = post.Name, Content = post.Content, Comments = 0 });
 
-            int Posts = await _service.GetAmountOfPostsByThreadId(insertedPost.ThreadId);
+            int posts = await _service.GetAmountOfPostsByThreadId(insertedPost.ThreadId);
 
-            _ = _producer.Produce(JsonSerializer.Serialize(new { insertedPost?.ThreadId, Posts }), stoppingToken);
+            _ = _producer.Produce(JsonSerializer.Serialize(new { insertedPost?.ThreadId, posts }), stoppingToken);
 
             return CreatedAtAction(nameof(Get), new
             {
@@ -76,6 +76,7 @@ namespace PostService.API.Controllers
         public async Task<ActionResult<Post>> Update(string id, UpdatePostDTO post, CancellationToken stoppingToken)
         {
             var p = await _service.GetPost(id);
+            var oldname = p.Name;
 
             if (p is null)
             {
@@ -86,9 +87,9 @@ namespace PostService.API.Controllers
             p.Content = post.Content;
             var po = await _service.UpdatePost(p);
 
-            if (p.Name != po?.Name)
+            if (oldname != po?.Name)
             {
-                await _producer2.Produce(JsonSerializer.Serialize(new { p.Id, po?.Name }), stoppingToken);
+                _ = _producer2.Produce(JsonSerializer.Serialize(new { p.Id, po?.Name }), stoppingToken);
             }
 
             if (po is null)
@@ -100,7 +101,7 @@ namespace PostService.API.Controllers
         }
 
         [HttpDelete("{id:length(24)}")]
-        public async Task<IActionResult> Delete(string id)
+        public async Task<IActionResult> Delete(string id, CancellationToken stoppingToken)
         {
             var p = await _service.GetPost(id);
 
@@ -110,6 +111,10 @@ namespace PostService.API.Controllers
             }
 
             await _service.DeletePost(id);
+
+            int posts = await _service.GetAmountOfPostsByThreadId(p.ThreadId) - 1;
+
+            _ = _producer.Produce(JsonSerializer.Serialize(new { p?.ThreadId, posts }), stoppingToken);
 
             return NoContent();
         }

@@ -1,16 +1,17 @@
 ﻿using Confluent.Kafka;
 using PostService.API.Services;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace PostService.API.Kafka
 {
-    public class KafkaConsumer : BackgroundService
+    public class KafkaConsumer3 : BackgroundService
     {
-        private readonly ILogger<KafkaConsumer> _log;
+        private readonly ILogger<KafkaConsumer3> _log;
         private readonly IConsumer<Null, string> _consumer;
         private readonly IPostService _service;
 
-        public KafkaConsumer(ILogger<KafkaConsumer> log, IConsumer<Null, string> consumer, IPostService service)
+        public KafkaConsumer3(ILogger<KafkaConsumer3> log, IConsumer<Null, string> consumer, IPostService service)
         {
             _log = log;
             _consumer = consumer;
@@ -26,7 +27,7 @@ namespace PostService.API.Kafka
             {
                 try
                 {
-                    _consumer.Subscribe("updatethreadname");
+                    _consumer.Subscribe("newcomment");
 
                     var consumeResult = _consumer.Consume(stoppingToken);
                     var mv = consumeResult.Message.Value;
@@ -34,13 +35,11 @@ namespace PostService.API.Kafka
 
                     try
                     {
-                        var t = JsonSerializer.Deserialize<ThreadIdName>(mv);
-                        var p = t != null ? await _service.GetPostsByThreadId(t.Id) : null;
-                        foreach (var p2 in p)
-                        {
-                            p2.ThreadName = t?.Name;
-                            await _service.UpdatePost(p2);
-                        }
+                        var t = JsonSerializer.Deserialize<PostIdComments>(mv);
+                        _log.LogInformation($"Deserialized PostId: {t.PostId}, Comments: {t.Comments}");
+                        var p = t != null ? await _service.GetPost(t.PostId) : null;
+                        p.Comments = t.Comments;
+                        await _service.UpdatePost(p);
                     }
                     catch (JsonException ex)
                     {
@@ -74,10 +73,12 @@ namespace PostService.API.Kafka
             _consumer.Dispose();
             base.Dispose();
         }
-        private class ThreadIdName
+        private class PostIdComments
         {
-            public string Id { get; set; } = null!;
-            public string Name { get; set; } = null!;
+            [JsonPropertyName("PostId")]
+            public string PostId { get; set; } = null!;
+            [JsonPropertyName("comments")]
+            public int Comments { get; set; } = 0;
         }
     }
 }

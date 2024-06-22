@@ -4,13 +4,13 @@ using System.Text.Json;
 
 namespace PostService.API.Kafka
 {
-    public class KafkaConsumer : BackgroundService
+    public class KafkaConsumer2 : BackgroundService
     {
-        private readonly ILogger<KafkaConsumer> _log;
+        private readonly ILogger<KafkaConsumer2> _log;
         private readonly IConsumer<Null, string> _consumer;
         private readonly IPostService _service;
 
-        public KafkaConsumer(ILogger<KafkaConsumer> log, IConsumer<Null, string> consumer, IPostService service)
+        public KafkaConsumer2(ILogger<KafkaConsumer2> log, IConsumer<Null, string> consumer, IPostService service)
         {
             _log = log;
             _consumer = consumer;
@@ -26,7 +26,7 @@ namespace PostService.API.Kafka
             {
                 try
                 {
-                    _consumer.Subscribe("updatethreadname");
+                    _consumer.Subscribe("accountdeleted");
 
                     var consumeResult = _consumer.Consume(stoppingToken);
                     var mv = consumeResult.Message.Value;
@@ -34,12 +34,17 @@ namespace PostService.API.Kafka
 
                     try
                     {
-                        var t = JsonSerializer.Deserialize<ThreadIdName>(mv);
-                        var p = t != null ? await _service.GetPostsByThreadId(t.Id) : null;
-                        foreach (var p2 in p)
+                        var accountId = 0;
+                        var parts = mv.Split(" ");
+                        if (parts.Length > 0)
                         {
-                            p2.ThreadName = t?.Name;
-                            await _service.UpdatePost(p2);
+                            accountId = JsonSerializer.Deserialize<int>(parts[0]);
+                            //_log.LogInformation(accountId.ToString());
+                            var posts = accountId != 0 ? await _service.GetPostsByAuthorId(accountId) : null;
+                            foreach (var post in posts)
+                            {
+                                await _service.DeletePost(post.Id);
+                            }
                         }
                     }
                     catch (JsonException ex)
@@ -73,11 +78,6 @@ namespace PostService.API.Kafka
         {
             _consumer.Dispose();
             base.Dispose();
-        }
-        private class ThreadIdName
-        {
-            public string Id { get; set; } = null!;
-            public string Name { get; set; } = null!;
         }
     }
 }

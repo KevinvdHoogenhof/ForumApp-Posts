@@ -4,6 +4,7 @@ using PostService.API.Context;
 using PostService.API.Kafka;
 using PostService.API.SeedData;
 using PostService.API.Services;
+using Prometheus;
 
 namespace PostService.API
 {
@@ -14,6 +15,7 @@ namespace PostService.API
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
+            builder.Services.AddMetrics();
 
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -44,8 +46,20 @@ namespace PostService.API
             var consumer = new ConsumerBuilder<Null, string>(consumerConfig).Build();
             //consumer.Subscribe("updatethreadname");
 
+            //Kafka consumer 2
+            var consumer2 = new ConsumerBuilder<Null, string>(consumerConfig).Build();
+
+            //Kafka consumer 3
+            var consumer3 = new ConsumerBuilder<Null, string>(consumerConfig).Build();
+
             builder.Services.AddHostedService(sp =>
                 new KafkaConsumer(sp.GetRequiredService<ILogger<KafkaConsumer>>(), consumer, sp.GetRequiredService<IPostService>()));
+
+            builder.Services.AddHostedService(sp =>
+                new KafkaConsumer2(sp.GetRequiredService<ILogger<KafkaConsumer2>>(), consumer2, sp.GetRequiredService<IPostService>()));
+
+            builder.Services.AddHostedService(sp =>
+                new KafkaConsumer3(sp.GetRequiredService<ILogger<KafkaConsumer3>>(), consumer3, sp.GetRequiredService<IPostService>()));
 
             var app = builder.Build();
 
@@ -57,6 +71,9 @@ namespace PostService.API
             }
 
             //app.UseHttpsRedirection();
+
+            app.UseHttpMetrics();
+            app.UseMetricServer();
 
             app.UseAuthorization();
 
